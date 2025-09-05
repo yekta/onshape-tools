@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Card,
   CardContent,
@@ -314,10 +314,6 @@ export default function OnshapeExporter() {
 
     const allJobPromises = jobs.map((job) => processExport(job));
     await Promise.all(allJobPromises);
-
-    toast("Export completed", {
-      description: `Processed ${jobs.length} export jobs`,
-    });
   };
 
   const downloadFile = (job: ExportJob) => {
