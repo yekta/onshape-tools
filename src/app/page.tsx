@@ -119,10 +119,6 @@ export default function OnshapeExporter() {
       setDocuments(data.items || []);
       setIsAuthenticated(true);
       setCurrentStep("documents");
-
-      toast.success("Authentication successful", {
-        description: `Loaded ${data.items?.length || 0} documents`,
-      });
     } catch (error) {
       toast.error("Authentication failed", {
         description:
@@ -191,10 +187,6 @@ export default function OnshapeExporter() {
       const flatParts = partsArrays.flat();
       setAllParts(flatParts);
       setCurrentStep("export");
-
-      toast.success("Document loaded", {
-        description: `Found ${studios.length} part studios with ${flatParts.length} total parts`,
-      });
     } catch (error) {
       toast.error("Failed to load document", {
         description: error instanceof Error ? error.message : "Unknown error",
