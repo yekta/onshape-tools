@@ -92,7 +92,7 @@ export default function ExportResultsPage({
                     <AlertCircle className="h-4 w-4 text-red-500" />
                   )}
 
-                  <div className="w-full flex flex-col">
+                  <div className="flex-1 min-w-0 flex flex-col">
                     <p className="font-medium leading-tight text-balance">
                       {job.studioName} → {job.partName}
                     </p>
@@ -102,11 +102,13 @@ export default function ExportResultsPage({
                       {job.partId}
                     </p>
                     {job.error && (
-                      <p className="text-sm text-destructive">{job.error}</p>
+                      <p className="text-sm text-destructive leading-tight mt-2">
+                        {job.error}
+                      </p>
                     )}
                   </div>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 shrink min-w-0">
                   <Badge
                     variant={
                       job.status === "done"
