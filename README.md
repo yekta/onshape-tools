@@ -2,4 +2,4 @@ These are tools for Onshape to make your life easier when dealing with various O
 
 ## Batch Exporter
 
-A tool to help you manage your Onshape API keys, making it easier to create, store, and use them securely.
+A tool that lets you batch export all parts in your Onshape documents to multiple formats like STL, STEP, SolidWorks, etc.
