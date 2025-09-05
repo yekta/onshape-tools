@@ -2,7 +2,7 @@ import { type NextRequest, NextResponse } from "next/server";
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { documentId: string } }
+  { params }: { params: Promise<{ documentId: string }> }
 ) {
   try {
     const authHeader = request.headers.get("authorization");
@@ -13,7 +13,7 @@ export async function GET(
       );
     }
 
-    const { documentId } = params;
+    const { documentId } = await params;
 
     // Get document info first to get the workspace ID
     const docResponse = await fetch(

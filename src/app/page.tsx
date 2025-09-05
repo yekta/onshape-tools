@@ -48,11 +48,13 @@ interface PartStudioPart {
 
 interface ExportJob {
   id: string;
+  documentId: string; // Added documentId for better identification
+  elementId: string; // Added elementId for better identification
   partId: string; // Added partId for unique identification
   partName: string;
   studioName: string; // Added studio name for context
   format: string;
-  status: "pending" | "active" | "done" | "failed";
+  status: "pending" | "exporting" | "done" | "failed";
   downloadUrl?: string;
   error?: string;
   blob?: Blob; // Store blob data for bulk download
@@ -212,11 +214,24 @@ export default function OnshapeExporter() {
 
     const jobs: ExportJob[] = [];
 
+    if (!selectedDocument) {
+      toast.error("No document selected", {
+        description: "Please select a document before exporting",
+      });
+      return;
+    }
+
     // Create export jobs for each part and format combination
     for (const part of allParts) {
       for (const format of selectedFormats) {
         jobs.push({
-          id: `${part.partId}-${format}`,
+          id: `${getJobId({
+            elementId: part.elementId,
+            partId: part.partId,
+            format,
+          })}`,
+          documentId: selectedDocument.id,
+          elementId: part.elementId,
           partId: part.partId,
           partName: part.name,
           studioName: part.studioName,
@@ -229,6 +244,8 @@ export default function OnshapeExporter() {
     setExportJobs(jobs);
     setCurrentStep("results");
 
+    console.log("Export jobs", jobs);
+
     const processedJobs = new Set<string>();
 
     const processExport = async (job: ExportJob) => {
@@ -238,13 +255,13 @@ export default function OnshapeExporter() {
       processedJobs.add(job.id);
 
       try {
-        const part = allParts.find((p) => p.partId === job.partId);
+        const part = allParts.find((p) => p.elementId === job.elementId);
         if (!part) return;
 
         setExportJobs((prev) =>
           prev.map((j) =>
             j.id === job.id && j.status === "pending"
-              ? { ...j, status: "active" }
+              ? { ...j, status: "exporting" }
               : j
           )
         );
@@ -258,7 +275,7 @@ export default function OnshapeExporter() {
             Authorization: `Basic ${btoa(`${apiKey}:${secretKey}`)}`,
           },
           body: JSON.stringify({
-            documentId: selectedDocument?.id,
+            documentId: selectedDocument.id,
             elementId: part.elementId,
             partId: part.partId,
             format: job.format,
@@ -303,9 +320,8 @@ export default function OnshapeExporter() {
       }
     };
 
-    for (const job of jobs) {
-      await processExport(job);
-    }
+    const allJobPromises = jobs.map((job) => processExport(job));
+    await Promise.all(allJobPromises);
 
     toast("Export completed", {
       description: `Processed ${jobs.length} export jobs`,
@@ -568,14 +584,14 @@ export default function OnshapeExporter() {
                     exportJobs.filter((j) => j.status === "done").length ===
                       0 ||
                     exportJobs.some(
-                      (j) => j.status === "pending" || j.status === "active"
+                      (j) => j.status === "pending" || j.status === "exporting"
                     )
                   }
                   variant="outline"
                   size="sm"
                 >
                   {exportJobs.some(
-                    (j) => j.status === "pending" || j.status === "active"
+                    (j) => j.status === "pending" || j.status === "exporting"
                   ) ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -605,7 +621,7 @@ export default function OnshapeExporter() {
                       {job.status === "pending" && (
                         <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
                       )}
-                      {job.status === "active" && (
+                      {job.status === "exporting" && (
                         <Loader2 className="h-4 w-4 animate-spin text-blue-500" />
                       )}
                       {job.status === "done" && (
@@ -620,7 +636,9 @@ export default function OnshapeExporter() {
                           {job.studioName} → {job.partName}
                         </p>
                         <p className="text-sm text-muted-foreground">
-                          {job.format} • ID: {job.partId.slice(0, 8)}...
+                          {job.format} • Document ID:{" "}
+                          {job.documentId.slice(0, 4)} • Element ID:{" "}
+                          {job.elementId.slice(0, 4)} • Part ID: {job.partId}
                         </p>
                         {job.error && (
                           <p className="text-sm text-red-500">{job.error}</p>
@@ -640,7 +658,7 @@ export default function OnshapeExporter() {
                         className={
                           job.status === "done"
                             ? "bg-green-500 hover:bg-green-600 text-white"
-                            : job.status === "active"
+                            : job.status === "exporting"
                             ? "bg-blue-500 hover:bg-blue-600 text-white"
                             : ""
                         }
@@ -669,4 +687,16 @@ export default function OnshapeExporter() {
       </div>
     </div>
   );
+}
+
+function getJobId({
+  elementId,
+  partId,
+  format,
+}: {
+  elementId: string;
+  partId: string;
+  format: string;
+}) {
+  return `${elementId}-${partId}-${format}`;
 }

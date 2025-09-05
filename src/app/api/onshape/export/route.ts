@@ -97,7 +97,11 @@ export async function POST(request: NextRequest) {
         return new NextResponse(fileBuffer, {
           headers: {
             "Content-Type": "application/octet-stream",
-            "Content-Disposition": `attachment; filename="part_${partId}.stl"`,
+            "Content-Disposition": `attachment; filename="${getFileName(
+              documentId,
+              elementId,
+              partId
+            )}.stl"`,
           },
         });
       } else if (!stlResponse.ok) {
@@ -112,7 +116,11 @@ export async function POST(request: NextRequest) {
         return new NextResponse(fileBuffer, {
           headers: {
             "Content-Type": "application/octet-stream",
-            "Content-Disposition": `attachment; filename="part_${partId}.stl"`,
+            "Content-Disposition": `attachment; filename="${getFileName(
+              documentId,
+              elementId,
+              partId
+            )}".stl"`,
           },
         });
       }
@@ -204,7 +212,11 @@ export async function POST(request: NextRequest) {
               return new NextResponse(fileBuffer, {
                 headers: {
                   "Content-Type": "application/octet-stream",
-                  "Content-Disposition": `attachment; filename="part_${partId}.${fileExtension}"`,
+                  "Content-Disposition": `attachment; filename="${getFileName(
+                    documentId,
+                    elementId,
+                    partId
+                  )}.${fileExtension}"`,
                 },
               });
             }
@@ -231,4 +243,8 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     );
   }
+}
+
+function getFileName(documentId: string, elementId: string, partId: string) {
+  return `part_${documentId}_${elementId}_${partId}`;
 }
