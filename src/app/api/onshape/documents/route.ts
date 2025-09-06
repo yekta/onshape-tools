@@ -1,5 +1,14 @@
 import { type NextRequest, NextResponse } from "next/server";
 
+const ALLOWED_PARAMS = [
+  "q",
+  "offset",
+  "limit",
+  "sortColumn",
+  "sortOrder",
+  "filter",
+];
+
 export async function GET(request: NextRequest) {
   try {
     const authHeader = request.headers.get("authorization");
@@ -10,7 +19,22 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const response = await fetch("https://cad.onshape.com/api/v6/documents", {
+    const { searchParams } = request.nextUrl;
+
+    // Build query params for Onshape
+    const url = new URL("https://cad.onshape.com/api/v6/documents");
+
+    // Apply allowed direct params
+    for (const key of ALLOWED_PARAMS) {
+      const v = searchParams.get(key);
+      if (v) url.searchParams.set(key, v);
+    }
+
+    if (url.searchParams.get("q") !== "") {
+      url.searchParams.set("filter", "0");
+    }
+
+    const response = await fetch(url.toString(), {
       headers: {
         Authorization: authHeader,
         Accept: "application/json",
@@ -20,7 +44,9 @@ export async function GET(request: NextRequest) {
 
     if (!response.ok) {
       return NextResponse.json(
-        { error: `Onshape API error: ${response.statusText}` },
+        {
+          error: `Onshape API error: ${response.status} ${response.statusText}`,
+        },
         { status: response.status }
       );
     }

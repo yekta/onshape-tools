@@ -4,6 +4,11 @@ export interface OnshapeDocument {
   href: string;
   public: boolean;
   permission: string;
+  owner: {
+    id: string;
+    name: string;
+    type: number;
+  };
 }
 
 export interface OnshapeElement {

@@ -34,6 +34,7 @@ export default function Page() {
     apiKey: string;
     secretKey: string;
   }>({ apiKey: "", secretKey: "" });
+  const [search, setSearch] = useState("");
 
   useEffect(() => {
     setSavedCredentials({ apiKey: "", secretKey: "" });
@@ -60,8 +61,8 @@ export default function Page() {
     isLoading: documentsLoading,
     error: documentsError,
   } = useQuery({
-    queryKey: ["documents", apiKey, secretKey],
-    queryFn: () => fetchDocuments({ apiKey, secretKey }),
+    queryKey: ["documents", search, apiKey, secretKey],
+    queryFn: () => fetchDocuments({ search, apiKey, secretKey }),
     enabled: isAuthenticated && !!apiKey && !!secretKey,
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
@@ -139,7 +140,7 @@ export default function Page() {
       }; path=/; samesite=strict; secure;`;
 
       // Test authentication by fetching documents
-      return fetchDocuments({ apiKey, secretKey });
+      return fetchDocuments({ search, apiKey, secretKey });
     },
     onSuccess: () => {
       setIsAuthenticated(true);
@@ -335,6 +336,8 @@ export default function Page() {
         {/* Step 2: Document Selection */}
         {currentStep === "documents" && (
           <DocumentSelectionPage
+            search={search}
+            setSearch={setSearch}
             documents={documents}
             onSelectDocument={selectDocument}
             onBackToAuth={resetApp}
@@ -376,13 +379,29 @@ export default function Page() {
 
 // API functions
 async function fetchDocuments({
+  search,
   apiKey,
   secretKey,
 }: {
+  search: string;
   apiKey: string;
   secretKey: string;
 }) {
-  const response = await fetch("/api/onshape/documents", {
+  const url = `/api/onshape/documents`;
+  const params = new URLSearchParams();
+
+  if (search !== "") {
+    params.append("q", search);
+  }
+
+  let fullUrl = url;
+  const paramsStr = params.toString();
+
+  if (paramsStr !== "") {
+    fullUrl += `?${paramsStr}`;
+  }
+
+  const response = await fetch(fullUrl, {
     method: "GET",
     headers: {
       Authorization: `Basic ${btoa(`${apiKey}:${secretKey}`)}`,

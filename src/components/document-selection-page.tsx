@@ -8,7 +8,10 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { ArrowLeft, FileText, Loader } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { ArrowLeft, FileText, Loader, SearchIcon } from "lucide-react";
+import { useState } from "react";
+import { useDebounceCallback } from "usehooks-ts";
 
 type TProps = {
   documents: OnshapeDocument[];
@@ -16,6 +19,8 @@ type TProps = {
   onBackToAuth: () => void;
   isLoading: boolean;
   selectedDocument: OnshapeDocument | null;
+  search: string;
+  setSearch: (value: string) => void;
 };
 
 export default function DocumentSelectionPage({
@@ -24,7 +29,12 @@ export default function DocumentSelectionPage({
   onBackToAuth,
   isLoading,
   selectedDocument,
+  search,
+  setSearch,
 }: TProps) {
+  const setSearchDebounced = useDebounceCallback(setSearch, 400);
+  const [searchLocal, setSearchLocal] = useState(search);
+
   return (
     <div className="w-full flex flex-col items-center">
       <Card className="w-full max-w-xl">
@@ -47,8 +57,25 @@ export default function DocumentSelectionPage({
             Back to Authentication
           </Button>
           <div className="w-full flex flex-col gap-2 mt-4">
+            <div className="w-full relative">
+              <Input
+                placeholder="Search documents..."
+                value={searchLocal}
+                className="pl-8"
+                onChange={(e) => {
+                  const value = e.target.value;
+                  setSearchLocal(value);
+                  if (value === "") {
+                    setSearch(value);
+                    return;
+                  }
+                  setSearchDebounced(value);
+                }}
+              />
+              <SearchIcon className="pointer-events-none text-muted-foreground size-4 absolute left-3 top-1/2 transform -translate-y-1/2" />
+            </div>
             {isLoading && (
-              <div className="w-full flex gap-2 items-center justify-center py-4 px-6 text-muted-foreground">
+              <div className="w-full flex gap-2 items-center justify-center pt-4 px-6 text-muted-foreground">
                 <Loader className="h-4 w-4 animate-spin" />
                 <p className="leading-tight text-sm">Loading documents...</p>
               </div>
