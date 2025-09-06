@@ -39,37 +39,45 @@ export default function AuthPage({
             Enter your Onshape API credentials to get started
           </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="username">API Key</Label>
-            <Input
-              id="username"
-              placeholder="Your Onshape API key"
-              value={apiKey}
-              onChange={(e) => onApiKeyChange(e.target.value)}
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="password">Secret Key</Label>
-            <Input
-              id="password"
-              type="password"
-              placeholder="Your Onshape secret key"
-              value={secretKey}
-              onChange={(e) => onSecretKeyChange(e.target.value)}
-            />
-          </div>
-          <Button onClick={onConnect} disabled={isLoading} className="w-full">
-            {isLoading ? (
-              <>
-                <Loader className="h-4 w-4 animate-spin" />
-                Authenticating...
-              </>
-            ) : (
-              "Connect to Onshape"
-            )}
-          </Button>
-        </CardContent>
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            onConnect();
+          }}
+          className="w-full flex flex-col"
+        >
+          <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="username">API Key</Label>
+              <Input
+                id="username"
+                placeholder="Your Onshape API key"
+                value={apiKey}
+                onChange={(e) => onApiKeyChange(e.target.value)}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="password">Secret Key</Label>
+              <Input
+                id="password"
+                type="password"
+                placeholder="Your Onshape secret key"
+                value={secretKey}
+                onChange={(e) => onSecretKeyChange(e.target.value)}
+              />
+            </div>
+            <Button disabled={isLoading} className="w-full">
+              {isLoading ? (
+                <>
+                  <Loader className="h-4 w-4 animate-spin" />
+                  Authenticating...
+                </>
+              ) : (
+                "Connect to Onshape"
+              )}
+            </Button>
+          </CardContent>
+        </form>
       </Card>
     </div>
   );
