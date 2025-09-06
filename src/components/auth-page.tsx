@@ -8,7 +8,7 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Loader, Settings } from "lucide-react";
+import { Loader, LogIn, Settings } from "lucide-react";
 
 type TProps = {
   onConnect: () => void;
@@ -90,7 +90,10 @@ export default function AuthPage({
                   Authenticating...
                 </>
               ) : (
-                "Connect to Onshape"
+                <>
+                  <LogIn className="h-4 w-4" />
+                  Connect to Onshape
+                </>
               )}
             </Button>
           </CardContent>
