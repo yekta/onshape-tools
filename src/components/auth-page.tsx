@@ -42,6 +42,7 @@ export default function AuthPage({
         <form
           onSubmit={(e) => {
             e.preventDefault();
+            if (isLoading) return;
             onConnect();
           }}
           className="w-full flex flex-col"
