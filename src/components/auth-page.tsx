@@ -49,7 +49,7 @@ export default function AuthPage({
         >
           <CardContent className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="username">Username</Label>
+              <Label htmlFor="username">API Key</Label>
               <Input
                 id="username"
                 placeholder="Your Onshape API key"
@@ -58,7 +58,7 @@ export default function AuthPage({
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
+              <Label htmlFor="password">Secret Key</Label>
               <Input
                 id="password"
                 type="password"
