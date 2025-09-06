@@ -11,7 +11,7 @@ import {
   OnshapeElement,
   PartStudioPart,
 } from "@/components/types";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
 export default function OnshapeExporter() {
@@ -34,6 +34,20 @@ export default function OnshapeExporter() {
     "auth" | "documents" | "export" | "results"
   >("auth");
 
+  useEffect(() => {
+    // On mount, check for saved cookies
+    const cookies = document.cookie.split("; ").reduce((acc, cookie) => {
+      const [key, value] = cookie.split("=");
+      acc[key] = value;
+      return acc;
+    }, {} as Record<string, string>);
+
+    if (cookies.onshape_api_key && cookies.onshape_secret_key) {
+      setApiKey(cookies.onshape_api_key);
+      setSecretKey(cookies.onshape_secret_key);
+    }
+  }, []);
+
   const authenticateAndLoadDocuments = async () => {
     if (!apiKey || !secretKey) {
       toast.error("Missing credentials", {
@@ -43,6 +57,15 @@ export default function OnshapeExporter() {
     }
 
     setIsLoading(true);
+
+    // save api key and secret key as strict cookies for 14 days
+    document.cookie = `onshape_api_key=${apiKey}; max-age=${
+      14 * 24 * 60 * 60
+    }; path=/; samesite=strict`;
+    document.cookie = `onshape_secret_key=${secretKey}; max-age=${
+      14 * 24 * 60 * 60
+    }; path=/; samesite=strict`;
+
     try {
       const response = await fetch("/api/onshape/documents", {
         method: "GET",
