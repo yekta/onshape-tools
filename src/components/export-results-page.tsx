@@ -15,11 +15,11 @@ import {
   Loader,
   Package,
 } from "lucide-react";
+import { toast } from "sonner";
 
 type TProps = {
   onStartOver: () => void;
   onBackToExport: () => void;
-  onDownloadAll: () => void;
   exportJobs: ExportJob[];
   totalParts: number;
   completedParts: number;
@@ -27,11 +27,28 @@ type TProps = {
 
 export default function ExportResultsPage({
   onBackToExport,
-  onDownloadAll,
   exportJobs,
   totalParts,
   completedParts,
 }: TProps) {
+  async function downloadAllFiles() {
+    const completedJobs = exportJobs.filter(
+      (job) => job.status === "done" && job.blob
+    );
+
+    if (completedJobs.length === 0) {
+      toast.error("No files to download", {
+        description: "No completed exports found",
+      });
+      return;
+    }
+
+    for (const job of completedJobs) {
+      downloadFile(job);
+      await new Promise((resolve) => setTimeout(resolve, 100));
+    }
+  }
+
   return (
     <div className="w-full flex flex-col items-center">
       <Card className="w-full max-w-xl">
@@ -52,7 +69,7 @@ export default function ExportResultsPage({
           </div>
           <Button
             className="mt-3 w-full"
-            onClick={onDownloadAll}
+            onClick={downloadAllFiles}
             disabled={
               exportJobs.filter((j) => j.status === "done").length === 0 ||
               exportJobs.some(
@@ -154,4 +171,21 @@ function statusToStatusText(status: string) {
     default:
       return status;
   }
+}
+
+function downloadFile(job: ExportJob) {
+  if (!job.blob) return;
+
+  const url = URL.createObjectURL(job.blob);
+  const a = document.createElement("a");
+  a.href = url;
+  const fileExtension =
+    job.format.toLowerCase() === "solidworks"
+      ? "sldprt"
+      : job.format.toLowerCase();
+  a.download = `${job.studioName}_${job.partName}.${fileExtension}`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
 }

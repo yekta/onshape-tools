@@ -14,6 +14,12 @@ import {
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { useQuery, useMutation, useQueries } from "@tanstack/react-query";
+import {
+  exportPart,
+  fetchDocumentElements,
+  fetchDocuments,
+  fetchStudioParts,
+} from "@/components/queries";
 
 export default function Page() {
   const [apiKey, setApiKey] = useState("");
@@ -26,6 +32,9 @@ export default function Page() {
     "STEP",
     "SOLIDWORKS",
   ]);
+  const [selectedPartStudioIds, setSelectedPartStudioIds] = useState<string[]>(
+    []
+  );
   const [exportJobs, setExportJobs] = useState<ExportJob[]>([]);
   const [currentStep, setCurrentStep] = useState<
     "auth" | "documents" | "export" | "results"
@@ -85,7 +94,14 @@ export default function Page() {
     (element: OnshapeElement) => element.elementType === "PARTSTUDIO"
   );
 
-  // Queries for parts from all studios
+  // Auto-select all part studios when document changes
+  useEffect(() => {
+    if (partStudios.length > 0) {
+      setSelectedPartStudioIds(partStudios.map((studio) => studio.id));
+    }
+  }, [partStudios.length]);
+
+  // Queries for parts from ALL studios (not just selected ones)
   const partQueries = useQueries({
     queries: partStudios.map((studio: OnshapeElement) => ({
       queryKey: [
@@ -107,7 +123,7 @@ export default function Page() {
     })),
   });
 
-  // Combine all parts with studio information
+  // Combine all parts with studio information from ALL studios
   const allParts: PartStudioPart[] = partQueries
     .map((query, index) => {
       if (query.data) {
@@ -121,6 +137,11 @@ export default function Page() {
       return [];
     })
     .flat();
+
+  // Get only parts from selected studios for export
+  const selectedParts = allParts.filter((part) =>
+    selectedPartStudioIds.includes(part.elementId)
+  );
 
   const partsLoading = partQueries.some((query) => query.isLoading);
 
@@ -156,7 +177,7 @@ export default function Page() {
   // Export mutation
   const exportMutation = useMutation({
     mutationFn: async () => {
-      if (allParts.length === 0 || selectedFormats.length === 0) {
+      if (selectedParts.length === 0 || selectedFormats.length === 0) {
         throw new Error("No parts found or no formats selected");
       }
 
@@ -164,10 +185,14 @@ export default function Page() {
         throw new Error("No document selected");
       }
 
+      if (selectedPartStudioIds.length === 0) {
+        throw new Error("No part studios selected");
+      }
+
       const jobs: ExportJob[] = [];
 
-      // Create export jobs for each part and format combination
-      for (const part of allParts) {
+      // Create export jobs for each SELECTED part and format combination
+      for (const part of selectedParts) {
         for (const format of selectedFormats) {
           jobs.push({
             id: `${getJobId({
@@ -251,48 +276,10 @@ export default function Page() {
     setCurrentStep("export");
   };
 
-  const downloadFile = (job: ExportJob) => {
-    if (!job.blob) return;
-
-    const url = URL.createObjectURL(job.blob);
-    const a = document.createElement("a");
-    a.href = url;
-    const fileExtension =
-      job.format.toLowerCase() === "solidworks"
-        ? "sldprt"
-        : job.format.toLowerCase();
-    a.download = `${job.studioName}_${job.partName}.${fileExtension}`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-  };
-
-  const downloadAllFiles = async () => {
-    const completedJobs = exportJobs.filter(
-      (job) => job.status === "done" && job.blob
-    );
-
-    if (completedJobs.length === 0) {
-      toast.error("No files to download", {
-        description: "No completed exports found",
-      });
-      return;
-    }
-
-    for (const job of completedJobs) {
-      downloadFile(job);
-      await new Promise((resolve) => setTimeout(resolve, 100));
-    }
-
-    toast("Download started", {
-      description: `Downloading ${completedJobs.length} files`,
-    });
-  };
-
   const resetApp = () => {
     setCurrentStep("auth");
     setSelectedDocument(null);
+    setSelectedPartStudioIds([]);
     setExportJobs([]);
     setIsAuthenticated(false);
   };
@@ -358,6 +345,9 @@ export default function Page() {
             allParts={allParts}
             selectedFormats={selectedFormats}
             setSelectedFormats={setSelectedFormats}
+            partStudios={partStudios}
+            selectedPartStudioIds={selectedPartStudioIds}
+            setSelectedPartStudioIds={setSelectedPartStudioIds}
           />
         )}
 
@@ -366,7 +356,6 @@ export default function Page() {
           <ExportResultPage
             onStartOver={resetApp}
             onBackToExport={() => setCurrentStep("export")}
-            onDownloadAll={downloadAllFiles}
             exportJobs={exportJobs}
             totalParts={totalParts}
             completedParts={completedParts}
@@ -375,136 +364,4 @@ export default function Page() {
       </div>
     </div>
   );
-}
-
-// API functions
-async function fetchDocuments({
-  search,
-  apiKey,
-  secretKey,
-}: {
-  search: string;
-  apiKey: string;
-  secretKey: string;
-}) {
-  const url = `/api/onshape/documents`;
-  const params = new URLSearchParams();
-
-  if (search !== "") {
-    params.append("q", search);
-  }
-
-  let fullUrl = url;
-  const paramsStr = params.toString();
-
-  if (paramsStr !== "") {
-    fullUrl += `?${paramsStr}`;
-  }
-
-  const response = await fetch(fullUrl, {
-    method: "GET",
-    headers: {
-      Authorization: `Basic ${btoa(`${apiKey}:${secretKey}`)}`,
-    },
-  });
-
-  if (!response.ok) {
-    throw new Error(`Authentication failed: ${response.statusText}`);
-  }
-
-  const resJson: { items: OnshapeDocument[] } = await response.json();
-  return resJson.items || [];
-}
-
-async function fetchDocumentElements({
-  documentId,
-  apiKey,
-  secretKey,
-}: {
-  documentId: string;
-  apiKey: string;
-  secretKey: string;
-}) {
-  const response = await fetch(
-    `/api/onshape/documents/${documentId}/elements`,
-    {
-      headers: {
-        Authorization: `Basic ${btoa(`${apiKey}:${secretKey}`)}`,
-      },
-    }
-  );
-
-  if (!response.ok) {
-    throw new Error("Failed to load document elements");
-  }
-
-  const resJson: OnshapeElement[] = await response.json();
-  return resJson;
-}
-
-async function fetchStudioParts({
-  documentId,
-  elementId,
-  apiKey,
-  secretKey,
-}: {
-  documentId: string;
-  elementId: string;
-  apiKey: string;
-  secretKey: string;
-}) {
-  const response = await fetch(
-    `/api/onshape/documents/${documentId}/elements/${elementId}/parts`,
-    {
-      headers: {
-        Authorization: `Basic ${btoa(`${apiKey}:${secretKey}`)}`,
-      },
-    }
-  );
-
-  if (!response.ok) {
-    throw new Error("Failed to load parts");
-  }
-
-  const resJson: PartStudioPart[] = await response.json();
-  return resJson;
-}
-
-async function exportPart({
-  documentId,
-  elementId,
-  partId,
-  format,
-  apiKey,
-  secretKey,
-}: {
-  documentId: string;
-  elementId: string;
-  partId: string;
-  format: string;
-  apiKey: string;
-  secretKey: string;
-}) {
-  const response = await fetch("/api/onshape/export", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Basic ${btoa(`${apiKey}:${secretKey}`)}`,
-    },
-    body: JSON.stringify({
-      documentId,
-      elementId,
-      partId,
-      format,
-    }),
-  });
-
-  if (!response.ok) {
-    const errorData = await response
-      .json()
-      .catch(() => ({ error: response.statusText }));
-    throw new Error(errorData.error || `Export failed: ${response.statusText}`);
-  }
-
-  return response.blob();
 }
