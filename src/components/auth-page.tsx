@@ -34,11 +34,11 @@ export default function AuthPage({
 }: TProps) {
   return (
     <div className="w-full flex flex-col items-center">
-      <Card className="w-full max-w-md">
+      <Card className="w-full max-w-xl">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Settings className="h-5 w-5" />
-            Authentication
+            Connect to Onshape
           </CardTitle>
           <CardDescription>
             Enter your Onshape API credentials to get started.

@@ -39,7 +39,9 @@ export default function ExportConfigurationPage({
           <CardDescription>
             {selectedDocument?.name} •{" "}
             <span className="text-foreground font-semibold">
-              {allParts.length} parts found
+              {isLoading
+                ? "Checking for parts..."
+                : `${allParts.length} parts found`}
             </span>
           </CardDescription>
         </CardHeader>
@@ -88,7 +90,7 @@ export default function ExportConfigurationPage({
               {isLoading ? (
                 <>
                   <Loader className="h-4 w-4 animate-spin" />
-                  Starting Export...
+                  Checking for Parts...
                 </>
               ) : (
                 <>

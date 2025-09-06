@@ -21,12 +21,16 @@ type TProps = {
   onBackToExport: () => void;
   onDownloadAll: () => void;
   exportJobs: ExportJob[];
+  totalParts: number;
+  completedParts: number;
 };
 
 export default function ExportResultsPage({
   onBackToExport,
   onDownloadAll,
   exportJobs,
+  totalParts,
+  completedParts,
 }: TProps) {
   return (
     <div className="w-full flex flex-col items-center">
@@ -62,7 +66,7 @@ export default function ExportResultsPage({
             ) ? (
               <>
                 <Loader className="h-4 w-4 animate-spin" />
-                Processing...
+                Processing ({completedParts}/{totalParts})...
               </>
             ) : (
               <>

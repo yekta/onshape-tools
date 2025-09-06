@@ -47,6 +47,12 @@ export default function DocumentSelectionPage({
             Back to Authentication
           </Button>
           <div className="w-full flex flex-col gap-2 mt-4">
+            {isLoading && (
+              <div className="w-full flex gap-2 items-center justify-center py-4 px-6 text-muted-foreground">
+                <Loader className="h-4 w-4 animate-spin" />
+                <p className="leading-tight text-sm">Loading documents...</p>
+              </div>
+            )}
             {documents.map((doc) => (
               <div
                 key={doc.id}
