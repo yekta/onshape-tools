@@ -340,7 +340,7 @@ export default function OnshapeExporter() {
 
   return (
     <div className="w-full min-h-screen pt-8 px-4 pb-16 flex flex-col items-center">
-      <div className="w-full max-w-5xl space-y-6">
+      <div className="w-full max-w-3xl space-y-6">
         <div className="text-center space-y-2">
           <h1 className="text-3xl font-bold">Onshape Bulk Exporter</h1>
           <p className="text-muted-foreground">
