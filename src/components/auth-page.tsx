@@ -17,6 +17,10 @@ type TProps = {
   onApiKeyChange: (value: string) => void;
   secretKey: string;
   onSecretKeyChange: (value: string) => void;
+  savedCredentials: {
+    apiKey: string;
+    secretKey: string;
+  };
 };
 
 export default function AuthPage({
@@ -26,6 +30,7 @@ export default function AuthPage({
   onApiKeyChange,
   secretKey,
   onSecretKeyChange,
+  savedCredentials,
 }: TProps) {
   return (
     <div className="w-full flex flex-col items-center">
@@ -36,7 +41,7 @@ export default function AuthPage({
             Authentication
           </CardTitle>
           <CardDescription>
-            Enter your Onshape API credentials to get started
+            Enter your Onshape API credentials to get started.
           </CardDescription>
         </CardHeader>
         <form
@@ -52,10 +57,14 @@ export default function AuthPage({
               <Label htmlFor="api_key">API Key</Label>
               <Input
                 id="api_key"
-                type="password"
                 placeholder="Your Onshape API key"
                 value={apiKey}
                 onChange={(e) => onApiKeyChange(e.target.value)}
+                className={`${
+                  savedCredentials.apiKey && savedCredentials.apiKey === apiKey
+                    ? "border-process/25 bg-process/10 text-process"
+                    : ""
+                }`}
               />
             </div>
             <div className="space-y-2">
@@ -66,6 +75,12 @@ export default function AuthPage({
                 placeholder="Your Onshape secret key"
                 value={secretKey}
                 onChange={(e) => onSecretKeyChange(e.target.value)}
+                className={`${
+                  savedCredentials.secretKey &&
+                  savedCredentials.secretKey === secretKey
+                    ? "border-process/25 bg-process/10 text-process"
+                    : ""
+                }`}
               />
             </div>
             <Button disabled={isLoading} className="w-full">

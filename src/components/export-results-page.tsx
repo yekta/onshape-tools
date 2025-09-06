@@ -96,7 +96,7 @@ export default function ExportResultsPage({
                     <p className="font-medium leading-tight text-balance">
                       {job.studioName} → {job.partName}
                     </p>
-                    <p className="text-xs text-muted-foreground text-balance leading-tight mt-2">
+                    <p className="text-xs text-muted-foreground text-balance leading-tight mt-1">
                       {job.format} • Document ID: {job.documentId.slice(0, 4)} •
                       Element ID: {job.elementId.slice(0, 4)} • Part ID:{" "}
                       {job.partId}
@@ -108,7 +108,7 @@ export default function ExportResultsPage({
                     )}
                   </div>
                 </div>
-                <div className="flex items-center gap-2 shrink min-w-0">
+                <div className="flex items-center gap-2 shrink min-w-0 w-24 justify-end">
                   <Badge
                     variant={
                       job.status === "done"
@@ -117,13 +117,13 @@ export default function ExportResultsPage({
                         ? "destructive"
                         : "secondary"
                     }
-                    className={
+                    className={`${
                       job.status === "done"
                         ? "bg-success text-background"
                         : job.status === "exporting"
-                        ? "bg-progress text-background"
+                        ? "bg-process text-background"
                         : ""
-                    }
+                    } rounded-full`}
                   >
                     {statusToStatusText(job.status)}
                   </Badge>

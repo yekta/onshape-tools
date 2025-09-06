@@ -33,8 +33,13 @@ export default function OnshapeExporter() {
   const [currentStep, setCurrentStep] = useState<
     "auth" | "documents" | "export" | "results"
   >("auth");
+  const [savedCredentials, setSavedCredentials] = useState<{
+    apiKey: string;
+    secretKey: string;
+  }>({ apiKey: "", secretKey: "" });
 
   useEffect(() => {
+    setSavedCredentials({ apiKey: "", secretKey: "" });
     // On mount, check for saved cookies
     const cookies = document.cookie.split("; ").reduce((acc, cookie) => {
       const [key, value] = cookie.split("=");
@@ -45,6 +50,10 @@ export default function OnshapeExporter() {
     if (cookies.onshape_api_key && cookies.onshape_secret_key) {
       setApiKey(cookies.onshape_api_key);
       setSecretKey(cookies.onshape_secret_key);
+      setSavedCredentials({
+        apiKey: cookies.onshape_api_key,
+        secretKey: cookies.onshape_secret_key,
+      });
     }
   }, []);
 
@@ -349,6 +358,7 @@ export default function OnshapeExporter() {
             onApiKeyChange={setApiKey}
             secretKey={secretKey}
             onSecretKeyChange={setSecretKey}
+            savedCredentials={savedCredentials}
           />
         )}
 

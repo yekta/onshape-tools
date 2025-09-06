@@ -34,7 +34,7 @@ export default function DocumentSelectionPage({
             Select Document
           </CardTitle>
           <CardDescription>
-            Choose an Onshape document to export parts from
+            Choose an Onshape document to export parts from.
           </CardDescription>
         </CardHeader>
         <CardContent>
