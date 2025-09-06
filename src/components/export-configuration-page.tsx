@@ -79,15 +79,11 @@ export default function ExportConfigurationPage({
             </div>
           </div>
 
-          <div className="flex gap-2">
-            <Button variant="outline" onClick={onBackClick}>
-              <ArrowLeft className="h-4 w-4" />
-              Back
-            </Button>
+          <div className="w-full flex flex-col gap-2">
             <Button
               onClick={onExportClick}
               disabled={isLoading || selectedFormats.length === 0}
-              className="flex-1"
+              className="w-full"
             >
               {isLoading ? (
                 <>
@@ -102,6 +98,10 @@ export default function ExportConfigurationPage({
                   files)
                 </>
               )}
+            </Button>
+            <Button className="w-full" variant="outline" onClick={onBackClick}>
+              <ArrowLeft className="h-4 w-4" />
+              Back
             </Button>
           </div>
         </CardContent>
