@@ -41,19 +41,18 @@ export default function AuthPage({
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="apiKey">API Key</Label>
+            <Label htmlFor="username">API Key</Label>
             <Input
-              id="apiKey"
-              type="password"
+              id="username"
               placeholder="Your Onshape API key"
               value={apiKey}
               onChange={(e) => onApiKeyChange(e.target.value)}
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="secretKey">Secret Key</Label>
+            <Label htmlFor="password">Secret Key</Label>
             <Input
-              id="secretKey"
+              id="password"
               type="password"
               placeholder="Your Onshape secret key"
               value={secretKey}
