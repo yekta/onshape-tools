@@ -83,13 +83,13 @@ export default function ExportResultsPage({
                     <Loader className="h-4 w-4 animate-spin text-muted-foreground" />
                   )}
                   {job.status === "exporting" && (
-                    <Loader className="h-4 w-4 animate-spin text-blue-500" />
+                    <Loader className="h-4 w-4 animate-spin text-process" />
                   )}
                   {job.status === "done" && (
                     <CheckCircle className="h-4 w-4 text-success" />
                   )}
                   {job.status === "failed" && (
-                    <AlertCircle className="h-4 w-4 text-red-500" />
+                    <AlertCircle className="h-4 w-4 text-destructive" />
                   )}
 
                   <div className="flex-1 min-w-0 flex flex-col">
