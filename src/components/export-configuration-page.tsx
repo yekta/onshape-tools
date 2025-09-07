@@ -82,7 +82,7 @@ export default function ExportConfigurationPage({
                 <Label
                   key={format.id}
                   htmlFor={format.id}
-                  className="w-[calc(100%+1rem)] flex items-start gap-0 cursor-pointer hover:bg-accent py-2 first:-mt-2 px-2 rounded -mx-2"
+                  className="w-[calc(100%+1rem)] flex items-start gap-0 cursor-pointer hover:bg-accent active:bg-accent py-2 first:-mt-2 px-2 rounded -mx-2"
                 >
                   <Checkbox
                     id={format.id}
@@ -114,7 +114,7 @@ export default function ExportConfigurationPage({
               {/* Select All Option */}
               <Label
                 htmlFor="select-all-studios"
-                className="w-[calc(100%+1rem)] flex items-start gap-0 cursor-pointer hover:bg-accent py-2 first:-mt-2 px-2 rounded -mx-2"
+                className="w-[calc(100%+1rem)] flex items-start gap-0 cursor-pointer hover:bg-accent active:bg-accent py-2 first:-mt-2 px-2 rounded -mx-2"
               >
                 <Checkbox
                   id="select-all-studios"
@@ -151,7 +151,7 @@ export default function ExportConfigurationPage({
                       <Label
                         key={studio.id}
                         htmlFor={studio.id}
-                        className="w-[calc(100%+1rem)] flex items-start gap-0 cursor-pointer hover:bg-accent py-2 first:-mt-2 px-2 rounded -mx-2"
+                        className="w-[calc(100%+1rem)] flex items-start gap-0 cursor-pointer hover:bg-accent active:bg-accent py-2 first:-mt-2 px-2 rounded -mx-2"
                       >
                         <Checkbox
                           id={studio.id}
