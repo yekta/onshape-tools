@@ -14,7 +14,13 @@ import {
 } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
-import { ArrowLeft, Download, Loader, SettingsIcon } from "lucide-react";
+import {
+  ArrowLeft,
+  Download,
+  Loader,
+  Package,
+  SettingsIcon,
+} from "lucide-react";
 
 type TProps = {
   onBackClick: () => void;
@@ -63,7 +69,7 @@ export default function ExportConfigurationPage({
     <div className="w-full flex flex-col items-center gap-6">
       <Card className="w-full max-w-xl">
         <CardHeader>
-          <CardTitle>
+          <CardTitle className="flex items-center gap-1.5">
             <SettingsIcon className="h-5 w-5" />
             Export Configuration
           </CardTitle>
@@ -76,9 +82,13 @@ export default function ExportConfigurationPage({
             </span>
           </CardDescription>
         </CardHeader>
-        <CardContent className="w-full flex flex-col gap-6">
+        <CardContent className="w-full flex flex-col items-start gap-6">
+          <Button variant="outline" onClick={onBackClick}>
+            <ArrowLeft className="h-4 w-4" />
+            Back to Documents
+          </Button>
           {/* Export Formats */}
-          <div className="w-full flex flex-col">
+          <div className="w-full flex flex-col -mt-1.5">
             <Label className="text-base font-medium">Export Formats</Label>
             <div className="w-full flex flex-col pt-3">
               {EXPORT_FORMATS.map((format) => (
@@ -131,7 +141,8 @@ export default function ExportConfigurationPage({
                   }}
                 />
                 <p className="font-medium flex-1 pl-2 cursor-pointer">
-                  Select All ({partStudios.length})
+                  {allStudiosSelected ? "Deselect" : "Select"} All (
+                  {partStudios.length})
                 </p>
               </Label>
               <hr className="border-t border-border -mt-2" />
@@ -207,15 +218,12 @@ export default function ExportConfigurationPage({
                 </>
               ) : (
                 <>
-                  <Download className="h-4 w-4" />
-                  Export Selected Parts (
-                  {selectedPartsCount * selectedFormats.length} files)
+                  <Package className="h-4 w-4" />
+                  Export Parts ({selectedPartsCount *
+                    selectedFormats.length}{" "}
+                  files)
                 </>
               )}
-            </Button>
-            <Button className="w-full" variant="outline" onClick={onBackClick}>
-              <ArrowLeft className="h-4 w-4" />
-              Back
             </Button>
           </div>
         </CardContent>

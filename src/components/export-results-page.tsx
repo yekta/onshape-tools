@@ -12,6 +12,7 @@ import {
   AlertCircle,
   ArrowLeft,
   CheckCircle,
+  Download,
   Loader,
   Package,
 } from "lucide-react";
@@ -53,7 +54,7 @@ export default function ExportResultsPage({
     <div className="w-full flex flex-col items-center">
       <Card className="w-full max-w-xl">
         <CardHeader>
-          <CardTitle className="flex items-center justify-between">
+          <CardTitle className="flex items-center gap-1.5">
             <Package className="h-5 w-5" />
             Export Results
           </CardTitle>
@@ -88,7 +89,7 @@ export default function ExportResultsPage({
               </>
             ) : (
               <>
-                <Package className="h-4 w-4" />
+                <Download className="h-4 w-4" />
                 Download All (
                 {exportJobs.filter((j) => j.status === "done").length})
               </>
