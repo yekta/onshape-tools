@@ -77,11 +77,12 @@ export default function ExportConfigurationPage({
           {/* Export Formats */}
           <div className="w-full flex flex-col">
             <Label className="text-base font-medium">Export Formats</Label>
-            <div className="w-full flex flex-col gap-4 pt-3">
+            <div className="w-full flex flex-col pt-3">
               {EXPORT_FORMATS.map((format) => (
-                <div
+                <Label
                   key={format.id}
-                  className="w-full flex items-start space-x-2"
+                  htmlFor={format.id}
+                  className="w-[calc(100%+1rem)] flex items-start gap-0 cursor-pointer hover:bg-accent py-2 first:-mt-2 px-2 rounded -mx-2"
                 >
                   <Checkbox
                     id={format.id}
@@ -96,16 +97,13 @@ export default function ExportConfigurationPage({
                       }
                     }}
                   />
-                  <Label
-                    htmlFor={format.id}
-                    className="font-medium flex flex-col items-start gap-1 cursor-pointer"
-                  >
+                  <p className="flex-1 pl-2 font-medium flex flex-col items-start gap-1 cursor-pointer">
                     {format.name}
-                    <p className="text-xs text-muted-foreground">
+                    <span className="text-xs text-muted-foreground">
                       {format.description}
-                    </p>
-                  </Label>
-                </div>
+                    </span>
+                  </p>
+                </Label>
               ))}
             </div>
           </div>
@@ -114,7 +112,10 @@ export default function ExportConfigurationPage({
             <Label className="text-base font-medium">Part Studios</Label>
             <div className="w-full flex flex-col gap-3 pt-3">
               {/* Select All Option */}
-              <div className="w-full flex items-center space-x-2 pb-2 border-b">
+              <Label
+                htmlFor="select-all-studios"
+                className="w-[calc(100%+1rem)] flex items-start gap-0 cursor-pointer hover:bg-accent py-2 first:-mt-2 px-2 rounded -mx-2"
+              >
                 <Checkbox
                   id="select-all-studios"
                   checked={allStudiosSelected}
@@ -126,13 +127,11 @@ export default function ExportConfigurationPage({
                     }
                   }}
                 />
-                <Label
-                  htmlFor="select-all-studios"
-                  className="font-medium cursor-pointer"
-                >
+                <p className="font-medium flex-1 pl-2 cursor-pointer">
                   Select All ({partStudios.length})
-                </Label>
-              </div>
+                </p>
+              </Label>
+              <hr className="border-t border-border -mt-2" />
 
               {/* Individual Studios */}
               {isLoading && (
@@ -141,47 +140,48 @@ export default function ExportConfigurationPage({
                   <p className="leading-tight text-sm">Checking for parts...</p>
                 </div>
               )}
-              {!isLoading &&
-                partStudios.map((studio) => {
-                  const partCount = getPartCountForStudio(studio.id);
-                  const selectedPartCount = getSelectedPartCountForStudio(
-                    studio.id
-                  );
-                  return (
-                    <div
-                      key={studio.id}
-                      className="w-full flex items-start space-x-2"
-                    >
-                      <Checkbox
-                        id={studio.id}
-                        checked={selectedPartStudioIds.includes(studio.id)}
-                        onCheckedChange={(checked) => {
-                          if (checked) {
-                            setSelectedPartStudioIds([
-                              ...selectedPartStudioIds,
-                              studio.id,
-                            ]);
-                          } else {
-                            setSelectedPartStudioIds(
-                              selectedPartStudioIds.filter(
-                                (id) => id !== studio.id
-                              )
-                            );
-                          }
-                        }}
-                      />
+              {!isLoading && (
+                <div className="w-full flex flex-col">
+                  {partStudios.map((studio) => {
+                    const partCount = getPartCountForStudio(studio.id);
+                    const selectedPartCount = getSelectedPartCountForStudio(
+                      studio.id
+                    );
+                    return (
                       <Label
+                        key={studio.id}
                         htmlFor={studio.id}
-                        className="font-medium flex flex-col items-start gap-1 cursor-pointer"
+                        className="w-[calc(100%+1rem)] flex items-start gap-0 cursor-pointer hover:bg-accent py-2 first:-mt-2 px-2 rounded -mx-2"
                       >
-                        {studio.name}
-                        <p className="text-xs text-muted-foreground">
-                          {selectedPartCount}/{partCount} parts selected
+                        <Checkbox
+                          id={studio.id}
+                          checked={selectedPartStudioIds.includes(studio.id)}
+                          onCheckedChange={(checked) => {
+                            if (checked) {
+                              setSelectedPartStudioIds([
+                                ...selectedPartStudioIds,
+                                studio.id,
+                              ]);
+                            } else {
+                              setSelectedPartStudioIds(
+                                selectedPartStudioIds.filter(
+                                  (id) => id !== studio.id
+                                )
+                              );
+                            }
+                          }}
+                        />
+                        <p className="font-medium pl-2 flex flex-col items-start gap-1 cursor-pointer">
+                          {studio.name}
+                          <span className="text-xs text-muted-foreground">
+                            {selectedPartCount}/{partCount} parts selected
+                          </span>
                         </p>
                       </Label>
-                    </div>
-                  );
-                })}
+                    );
+                  })}
+                </div>
+              )}
             </div>
           </div>
 
