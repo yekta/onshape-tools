@@ -14,7 +14,7 @@ import {
 } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
-import { ArrowLeft, Download, Loader } from "lucide-react";
+import { ArrowLeft, Download, Loader, SettingsIcon } from "lucide-react";
 
 type TProps = {
   onBackClick: () => void;
@@ -63,7 +63,10 @@ export default function ExportConfigurationPage({
     <div className="w-full flex flex-col items-center gap-6">
       <Card className="w-full max-w-xl">
         <CardHeader>
-          <CardTitle>Export Configuration</CardTitle>
+          <CardTitle>
+            <SettingsIcon className="h-5 w-5" />
+            Export Configuration
+          </CardTitle>
           <CardDescription>
             {selectedDocument?.name} •{" "}
             <span className="text-foreground font-semibold">

@@ -54,6 +54,7 @@ export default function ExportResultsPage({
       <Card className="w-full max-w-xl">
         <CardHeader>
           <CardTitle className="flex items-center justify-between">
+            <Package className="h-5 w-5" />
             Export Results
           </CardTitle>
           <CardDescription>

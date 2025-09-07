@@ -8,7 +8,7 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Loader, LogIn, Settings } from "lucide-react";
+import { Loader, LogIn, LogInIcon, Settings } from "lucide-react";
 
 type TProps = {
   onConnect: () => void;
@@ -37,7 +37,7 @@ export default function AuthPage({
       <Card className="w-full max-w-xl">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <Settings className="h-5 w-5" />
+            <LogInIcon className="h-5 w-5" />
             Connect to Onshape
           </CardTitle>
           <CardDescription>
