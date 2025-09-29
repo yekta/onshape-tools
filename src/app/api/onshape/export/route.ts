@@ -12,7 +12,7 @@ function cartesianProduct<T>(arrays: T[][]): T[][] {
 function buildConfigPairs(options: ConfigOption[], combo: (string | number)[]) {
   return options.map((opt, i) => ({
     key: String(opt.key),
-    keyDisplay: String(opt.keyDisplay), // You can modify this if you have a better display name
+    keyDisplay: String(opt.keyDisplay),
     value: String(combo[i]),
     unit: opt.unit ?? "",
   }));
@@ -49,8 +49,9 @@ function getBaseFileName({
   partName: string;
   combineParts: boolean;
 }) {
-  if (combineParts) return `${elementName} - Combined`;
-  return `${elementName} - ${partName}`;
+  return combineParts
+    ? `${elementName} - Combined`
+    : `${elementName} - ${partName}`;
 }
 
 function extForFormat(fmt: string) {
@@ -72,7 +73,6 @@ export async function POST(request: NextRequest) {
     }
 
     const body: ExportInput = await request.json();
-
     const {
       documentId,
       elementId,
@@ -93,7 +93,6 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
-
     if (!combineParts && !partId) {
       return NextResponse.json(
         { error: "partId is required when combineParts is false" },
@@ -101,12 +100,10 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 1) Resolve workspace
+    // 1) Resolve default workspace for the document
     const docResponse = await fetch(
       `https://cad.onshape.com/api/v6/documents/${documentId}`,
-      {
-        headers: { Authorization: authHeader, Accept: "application/json" },
-      }
+      { headers: { Authorization: authHeader, Accept: "application/json" } }
     );
     if (!docResponse.ok) {
       return NextResponse.json(
@@ -123,14 +120,12 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 1.5) If combining parts, fetch all part IDs from the Part Studio
+    // 1.5) If combining parts, get all part IDs in the Part Studio
     let allPartIds: string[] = [];
     if (combineParts) {
       const partsResponse = await fetch(
         `https://cad.onshape.com/api/v6/parts/d/${documentId}/w/${workspaceId}?elementId=${elementId}`,
-        {
-          headers: { Authorization: authHeader, Accept: "application/json" },
-        }
+        { headers: { Authorization: authHeader, Accept: "application/json" } }
       );
       if (!partsResponse.ok) {
         return NextResponse.json(
@@ -139,11 +134,9 @@ export async function POST(request: NextRequest) {
         );
       }
       const partsData = await partsResponse.json();
-
       allPartIds = partsData
         .filter((p: any) => p.partId && !p.isMesh)
         .map((p: any) => p.partId);
-
       if (allPartIds.length === 0) {
         return NextResponse.json(
           { error: "No parts found in Part Studio" },
@@ -152,20 +145,16 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // 2) Build all configuration combinations
+    // 2) Build all configuration combinations (if any configurations provided)
     const options: ConfigOption[] = Array.isArray(configOptions)
       ? configOptions
       : [];
-
-    console.log("Configuration options:", options);
     const hasConfig = options.length > 0;
-
     const valueArrays = hasConfig ? options.map((o) => o.values) : [];
     const combos = hasConfig ? cartesianProduct(valueArrays) : [[]];
 
-    // 3) Iterate configs x formats, collect binaries into ZIP
+    // 3) Iterate over all configurations and formats, collecting binaries into a ZIP
     const zip = new JSZip();
-
     const STL_DEFAULTS = {
       mode: "binary",
       units: "millimeter",
@@ -185,41 +174,28 @@ export async function POST(request: NextRequest) {
         const fmt = String(format).toUpperCase();
 
         if (fmt === "STL") {
-          // --- STL export ---
-          let stlEndpoint: string;
+          // --- STL export (synchronous API) ---
+          const endpoint = combineParts
+            ? `https://cad.onshape.com/api/v6/partstudios/d/${documentId}/w/${workspaceId}/e/${elementId}/stl`
+            : `https://cad.onshape.com/api/v6/parts/d/${documentId}/w/${workspaceId}/e/${elementId}/partid/${encodeURIComponent(
+                partId!
+              )}/stl`;
 
-          if (combineParts) {
-            stlEndpoint = `https://cad.onshape.com/api/v6/partstudios/d/${documentId}/w/${workspaceId}/e/${elementId}/stl`;
-          } else {
-            stlEndpoint = `https://cad.onshape.com/api/v6/parts/d/${documentId}/w/${workspaceId}/e/${elementId}/partid/${encodeURIComponent(
-              partId
-            )}/stl`;
-          }
-
-          // Build query string manually to avoid double-encoding
-          const queryParts: string[] = [];
-
+          const queryParams: string[] = [];
           if (hasConfigurationParam) {
-            queryParts.push(
+            queryParams.push(
               `configuration=${encodeURIComponent(configurationString)}`
             );
           }
-          queryParts.push(`mode=${STL_DEFAULTS.mode}`);
-          queryParts.push(`units=${STL_DEFAULTS.units}`);
-          queryParts.push(`scale=${STL_DEFAULTS.scale}`);
-          queryParts.push(`angleTolerance=${STL_DEFAULTS.angleTolerance}`);
-          queryParts.push(`chordTolerance=${STL_DEFAULTS.chordTolerance}`);
-          queryParts.push(`minFacetWidth=${STL_DEFAULTS.minFacetWidth}`);
+          queryParams.push(`mode=${STL_DEFAULTS.mode}`);
+          queryParams.push(`units=${STL_DEFAULTS.units}`);
+          queryParams.push(`scale=${STL_DEFAULTS.scale}`);
+          queryParams.push(`angleTolerance=${STL_DEFAULTS.angleTolerance}`);
+          queryParams.push(`chordTolerance=${STL_DEFAULTS.chordTolerance}`);
+          queryParams.push(`minFacetWidth=${STL_DEFAULTS.minFacetWidth}`);
+          if (combineParts) queryParams.push(`grouping=true`);
 
-          if (combineParts) {
-            queryParts.push(`grouping=true`);
-          }
-
-          const stlUrl = `${stlEndpoint}?${queryParts.join("&")}`;
-
-          console.log("STL Request URL:", stlUrl);
-          console.log("Configuration string:", configurationString);
-
+          const stlUrl = `${endpoint}?${queryParams.join("&")}`;
           const stlResponse = await fetch(stlUrl, {
             headers: {
               Authorization: authHeader,
@@ -228,36 +204,27 @@ export async function POST(request: NextRequest) {
             redirect: "manual",
           });
 
-          console.log("STL Response status:", stlResponse.status);
-
           let fileBuffer: ArrayBuffer | null = null;
           let contentType = stlResponse.headers.get("content-type") || "";
-
           if (stlResponse.status === 307) {
+            // Follow redirect for STL download
             const redirectUrl = stlResponse.headers.get("location");
-            console.log("Redirect URL:", redirectUrl);
-
             if (!redirectUrl) {
               return NextResponse.json(
                 { error: "No redirect URL for STL" },
                 { status: 500 }
               );
             }
-
             const redirectResp = await fetch(redirectUrl, {
               headers: { Authorization: authHeader },
             });
-
-            console.log("Redirect response status:", redirectResp.status);
-
             if (!redirectResp.ok) {
               const errorText = await redirectResp.text();
-              console.error("Redirect error body:", errorText);
               return NextResponse.json(
                 {
                   error: `STL redirect failed: ${redirectResp.statusText}`,
                   details: errorText,
-                  redirectUrl: redirectUrl,
+                  redirectUrl,
                 },
                 { status: redirectResp.status }
               );
@@ -267,7 +234,6 @@ export async function POST(request: NextRequest) {
             fileBuffer = await redirectResp.arrayBuffer();
           } else if (!stlResponse.ok) {
             const errorText = await stlResponse.text();
-            console.error("STL error body:", errorText);
             return NextResponse.json(
               {
                 error: `STL export failed: ${stlResponse.statusText}`,
@@ -283,169 +249,43 @@ export async function POST(request: NextRequest) {
             documentId,
             elementId,
             elementName,
-            partId,
-            partName,
+            partId: partId || "",
+            partName: partName || "",
             combineParts,
           });
           const tagSuffix = hasConfigurationParam ? ` - ${configTag}` : "";
-
           const isZip =
             contentType.toLowerCase().includes("zip") ||
             (fileBuffer && new Uint8Array(fileBuffer)[0] === 0x50);
-
           const stlName = `${base}${tagSuffix}.stl`;
           const zipName = `${base}${tagSuffix}.zip`;
           zip.file(isZip ? zipName : stlName, Buffer.from(fileBuffer!));
           continue;
         }
 
-        // --- Non-STL formats ---
-        if (fmt === "STEP" || fmt === "SOLIDWORKS") {
-          const baseExportUrl =
-            fmt === "STEP"
-              ? `https://cad.onshape.com/api/v11/partstudios/d/${documentId}/w/${workspaceId}/e/${elementId}/export/step`
-              : `https://cad.onshape.com/api/v11/partstudios/d/${documentId}/w/${workspaceId}/e/${elementId}/export/solidworks`;
-
+        // --- Export other formats via Part Studio translations (async API) ---
+        {
+          // Prepare translation request
           const params = new URLSearchParams();
-          if (hasConfigurationParam)
+          if (hasConfigurationParam) {
             params.set("configuration", configurationString);
-
-          const exportBody: Record<string, unknown> = {
-            storeInDocument: false,
-          };
-
-          if (combineParts) {
-            exportBody.partIds = allPartIds;
-          } else if (partId) {
-            exportBody.partIds = [partId];
           }
-
-          const startRes = await fetch(
-            `${baseExportUrl}?${params.toString()}`,
-            {
-              method: "POST",
-              headers: {
-                Authorization: authHeader,
-                Accept: "application/json",
-                "Content-Type": "application/json",
-              },
-              body: JSON.stringify(exportBody),
-            }
-          );
-
-          if (!startRes.ok) {
-            return NextResponse.json(
-              {
-                error: `Failed to start ${fmt} export: ${startRes.statusText}`,
-              },
-              { status: startRes.status }
-            );
-          }
-
-          const startData = await startRes.json();
-
-          const maxAttempts = 90;
-          let attempt = 0;
-          while (attempt < maxAttempts) {
-            await new Promise((r) => setTimeout(r, 2000));
-            const statusRes = await fetch(
-              `https://cad.onshape.com/api/v6/translations/${startData.id}`,
-              {
-                headers: {
-                  Authorization: authHeader,
-                  Accept: "application/json",
-                },
-              }
-            );
-
-            if (!statusRes.ok) {
-              return NextResponse.json(
-                {
-                  error: `Failed to read ${fmt} export status: ${statusRes.statusText}`,
-                },
-                { status: statusRes.status }
-              );
-            }
-
-            const statusData = await statusRes.json();
-            if (statusData.requestState === "DONE") {
-              const ids: string[] = statusData.resultExternalDataIds || [];
-              if (ids.length === 0) break;
-
-              const downloadUrl = `https://cad.onshape.com/api/v6/documents/d/${documentId}/externaldata/${ids[0]}`;
-              const fileRes = await fetch(downloadUrl, {
-                headers: { Authorization: authHeader },
-              });
-              if (!fileRes.ok) {
-                return NextResponse.json(
-                  {
-                    error: `Failed to download ${fmt} file: ${fileRes.statusText}`,
-                  },
-                  { status: fileRes.status }
-                );
-              }
-              const fileBuffer = await fileRes.arrayBuffer();
-
-              const base = getBaseFileName({
-                documentId,
-                elementId,
-                elementName,
-                partId,
-                partName,
-                combineParts,
-              });
-              const ext = extForFormat(fmt);
-              const tagSuffix = hasConfigurationParam ? ` - ${configTag}` : "";
-              const name = `${base}${tagSuffix}.${ext}`;
-              zip.file(name, Buffer.from(fileBuffer));
-              break;
-            } else if (statusData.requestState === "FAILED") {
-              return NextResponse.json(
-                {
-                  error: `Export failed (${fmt}): ${
-                    statusData.failureReason || "Unknown"
-                  }`,
-                },
-                { status: 500 }
-              );
-            }
-            attempt++;
-          }
-
-          if (attempt >= maxAttempts) {
-            return NextResponse.json(
-              {
-                error: `Export timeout for ${fmt}${
-                  hasConfigurationParam
-                    ? ` (configuration ${configurationString})`
-                    : ""
-                }`,
-              },
-              { status: 408 }
-            );
-          }
-        } else {
-          const params = new URLSearchParams();
-          if (hasConfigurationParam)
-            params.set("configuration", configurationString);
-
-          const startTranslationUrl =
+          const translationUrl =
             `https://cad.onshape.com/api/v6/partstudios/d/${documentId}/w/${workspaceId}/e/${elementId}/translations` +
             (params.toString() ? `?${params.toString()}` : "");
-
           const tBody: Record<string, unknown> = {
             formatName: fmt,
             storeInDocument: false,
             translate: true,
           };
-
-          if (combineParts) {
-            tBody.partIds = allPartIds;
-          } else if (partId) {
+          if (!combineParts && partId) {
+            // Export only the specified part
             tBody.partIds = [partId];
           }
+          // If combineParts is true, no partIds are provided – export whole Part Studio
 
-          const translationResponse = await fetch(startTranslationUrl, {
+          // Initiate the translation
+          const translationRes = await fetch(translationUrl, {
             method: "POST",
             headers: {
               Authorization: authHeader,
@@ -454,18 +294,19 @@ export async function POST(request: NextRequest) {
             },
             body: JSON.stringify(tBody),
           });
-
-          if (!translationResponse.ok) {
+          if (!translationRes.ok) {
+            const errText = await translationRes.text();
             return NextResponse.json(
               {
-                error: `Failed to start ${fmt} translation: ${translationResponse.statusText}`,
+                error: `Failed to start ${fmt} translation: ${translationRes.statusText}`,
+                details: errText,
               },
-              { status: translationResponse.status }
+              { status: translationRes.status }
             );
           }
+          const translationData = await translationRes.json();
 
-          const translationData = await translationResponse.json();
-
+          // Poll translation status until DONE
           const maxAttempts = 90;
           let attempt = 0;
           while (attempt < maxAttempts) {
@@ -479,7 +320,6 @@ export async function POST(request: NextRequest) {
                 },
               }
             );
-
             if (!statusRes.ok) {
               return NextResponse.json(
                 {
@@ -488,12 +328,10 @@ export async function POST(request: NextRequest) {
                 { status: statusRes.status }
               );
             }
-
             const statusData = await statusRes.json();
             if (statusData.requestState === "DONE") {
               const ids: string[] = statusData.resultExternalDataIds || [];
               if (ids.length === 0) break;
-
               const downloadUrl = `https://cad.onshape.com/api/v6/documents/d/${documentId}/externaldata/${ids[0]}`;
               const fileRes = await fetch(downloadUrl, {
                 headers: { Authorization: authHeader },
@@ -507,19 +345,18 @@ export async function POST(request: NextRequest) {
                 );
               }
               const fileBuffer = await fileRes.arrayBuffer();
-
               const base = getBaseFileName({
                 documentId,
                 elementId,
                 elementName,
-                partId,
-                partName,
+                partId: partId || "",
+                partName: partName || "",
                 combineParts,
               });
               const ext = extForFormat(fmt);
               const tagSuffix = hasConfigurationParam ? ` - ${configTag}` : "";
-              const name = `${base}${tagSuffix}.${ext}`;
-              zip.file(name, Buffer.from(fileBuffer));
+              const fileName = `${base}${tagSuffix}.${ext}`;
+              zip.file(fileName, Buffer.from(fileBuffer));
               break;
             } else if (statusData.requestState === "FAILED") {
               return NextResponse.json(
@@ -533,7 +370,6 @@ export async function POST(request: NextRequest) {
             }
             attempt++;
           }
-
           if (attempt >= maxAttempts) {
             return NextResponse.json(
               {
@@ -550,12 +386,12 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    // 4) Package all exported files into a ZIP and return it
     const zipBuffer = await (zip as any).generateAsync({
       type: "nodebuffer",
       compression: "DEFLATE",
     });
     const zipName = `onshape_exports_${documentId}_${elementId}_${Date.now()}.zip`;
-
     return new NextResponse(zipBuffer, {
       headers: {
         "Content-Type": "application/zip",
