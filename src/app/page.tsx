@@ -205,6 +205,7 @@ export default function Page() {
           })}`,
           documentId: selectedDocument.id,
           elementId: part.elementId,
+          elementName: part.studioName,
           partId: part.partId,
           partName: part.name,
           studioName: part.studioName,
@@ -252,7 +253,9 @@ export default function Page() {
           const blob = await exportPart({
             documentId: selectedDocument.id,
             elementId: job.elementId,
+            elementName: job.elementName,
             partId: job.partId,
+            partName: job.partName,
             formats: job.formats,
             apiKey,
             secretKey,

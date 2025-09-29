@@ -102,7 +102,9 @@ export async function fetchStudioParts({
 export async function exportPart({
   documentId,
   elementId,
+  elementName,
   partId,
+  partName,
   formats,
   apiKey,
   secretKey,
@@ -111,7 +113,9 @@ export async function exportPart({
 }: {
   documentId: string;
   elementId: string;
+  elementName: string;
   partId: string;
+  partName: string;
   formats: string[];
   apiKey: string;
   secretKey: string;
@@ -121,7 +125,9 @@ export async function exportPart({
   const body: ExportInput = {
     documentId,
     elementId,
+    elementName,
     partId,
+    partName,
     formats,
     configOptions,
     combineParts,

@@ -12,6 +12,7 @@ function cartesianProduct<T>(arrays: T[][]): T[][] {
 function buildConfigPairs(options: ConfigOption[], combo: (string | number)[]) {
   return options.map((opt, i) => ({
     key: String(opt.key),
+    keyDisplay: String(opt.keyDisplay), // You can modify this if you have a better display name
     value: String(combo[i]),
     unit: opt.unit ?? "",
   }));
@@ -28,26 +29,28 @@ function buildConfigurationString(
     .join(";");
 }
 
-function humanConfigTag(pairs: { key: string; value: string }[]) {
+function humanConfigTag(
+  pairs: { key: string; keyDisplay: string; value: string }[]
+) {
   return pairs
-    .map(
-      ({ key, value }) =>
-        `${key.replace(/[^A-Za-z0-9_-]+/g, "")}-${String(value).replace(
-          /[^A-Za-z0-9_.-]+/g,
-          ""
-        )}`
-    )
-    .join("__");
+    .map(({ keyDisplay, value }) => `${keyDisplay} = ${value}`)
+    .join(" | ");
 }
 
-function getBaseFileName(
-  documentId: string,
-  elementId: string,
-  partId: string | null,
-  combineParts: boolean
-) {
-  if (combineParts) return `part_${documentId}_${elementId}`;
-  return `part_${documentId}_${elementId}_${partId || "all"}`;
+function getBaseFileName({
+  elementName,
+  partName,
+  combineParts,
+}: {
+  documentId: string;
+  elementId: string;
+  elementName: string;
+  partId: string;
+  partName: string;
+  combineParts: boolean;
+}) {
+  if (combineParts) return `${elementName} - Combined`;
+  return `${elementName} - ${partName}`;
 }
 
 function extForFormat(fmt: string) {
@@ -56,10 +59,6 @@ function extForFormat(fmt: string) {
   if (f === "parasolid") return "x_t";
   if (f === "iges") return "igs";
   return f;
-}
-
-function safeName(s: string) {
-  return s.replace(/[^A-Za-z0-9._-]/g, "_");
 }
 
 export async function POST(request: NextRequest) {
@@ -77,7 +76,9 @@ export async function POST(request: NextRequest) {
     const {
       documentId,
       elementId,
-      partId = "",
+      elementName,
+      partId,
+      partName,
       formats,
       configOptions,
       combineParts = false,
@@ -138,6 +139,7 @@ export async function POST(request: NextRequest) {
         );
       }
       const partsData = await partsResponse.json();
+
       allPartIds = partsData
         .filter((p: any) => p.partId && !p.isMesh)
         .map((p: any) => p.partId);
@@ -277,22 +279,22 @@ export async function POST(request: NextRequest) {
             fileBuffer = await stlResponse.arrayBuffer();
           }
 
-          const base = getBaseFileName(
+          const base = getBaseFileName({
             documentId,
             elementId,
-            partId || null,
-            combineParts
-          );
-          const tagSuffix = hasConfigurationParam
-            ? `__${safeName(configTag)}`
-            : "";
+            elementName,
+            partId,
+            partName,
+            combineParts,
+          });
+          const tagSuffix = hasConfigurationParam ? ` - ${configTag}` : "";
 
           const isZip =
             contentType.toLowerCase().includes("zip") ||
             (fileBuffer && new Uint8Array(fileBuffer)[0] === 0x50);
 
-          const stlName = `${safeName(base)}${tagSuffix}.stl`;
-          const zipName = `${safeName(base)}${tagSuffix}.zip`;
+          const stlName = `${base}${tagSuffix}.stl`;
+          const zipName = `${base}${tagSuffix}.zip`;
           zip.file(isZip ? zipName : stlName, Buffer.from(fileBuffer!));
           continue;
         }
@@ -384,17 +386,17 @@ export async function POST(request: NextRequest) {
               }
               const fileBuffer = await fileRes.arrayBuffer();
 
-              const base = getBaseFileName(
+              const base = getBaseFileName({
                 documentId,
                 elementId,
-                partId || null,
-                combineParts
-              );
+                elementName,
+                partId,
+                partName,
+                combineParts,
+              });
               const ext = extForFormat(fmt);
-              const tagSuffix = hasConfigurationParam
-                ? `__${safeName(configTag)}`
-                : "";
-              const name = `${safeName(base)}${tagSuffix}.${ext}`;
+              const tagSuffix = hasConfigurationParam ? ` - ${configTag}` : "";
+              const name = `${base}${tagSuffix}.${ext}`;
               zip.file(name, Buffer.from(fileBuffer));
               break;
             } else if (statusData.requestState === "FAILED") {
@@ -506,17 +508,17 @@ export async function POST(request: NextRequest) {
               }
               const fileBuffer = await fileRes.arrayBuffer();
 
-              const base = getBaseFileName(
+              const base = getBaseFileName({
                 documentId,
                 elementId,
-                partId || null,
-                combineParts
-              );
+                elementName,
+                partId,
+                partName,
+                combineParts,
+              });
               const ext = extForFormat(fmt);
-              const tagSuffix = hasConfigurationParam
-                ? `__${safeName(configTag)}`
-                : "";
-              const name = `${safeName(base)}${tagSuffix}.${ext}`;
+              const tagSuffix = hasConfigurationParam ? ` - ${configTag}` : "";
+              const name = `${base}${tagSuffix}.${ext}`;
               zip.file(name, Buffer.from(fileBuffer));
               break;
             } else if (statusData.requestState === "FAILED") {
@@ -552,9 +554,7 @@ export async function POST(request: NextRequest) {
       type: "nodebuffer",
       compression: "DEFLATE",
     });
-    const zipName = `onshape_exports_${safeName(documentId)}_${safeName(
-      elementId
-    )}_${Date.now()}.zip`;
+    const zipName = `onshape_exports_${documentId}_${elementId}_${Date.now()}.zip`;
 
     return new NextResponse(zipBuffer, {
       headers: {

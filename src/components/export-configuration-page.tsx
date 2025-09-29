@@ -148,7 +148,12 @@ export default function ExportConfigurationPage({
         if (!raw) continue;
         const values = parseCSVValues(raw);
         if (values.length > 0)
-          rows.push({ key, values, unit: p.rangeAndDefault?.units ?? "" });
+          rows.push({
+            key,
+            keyDisplay: p.parameterName,
+            values,
+            unit: p.rangeAndDefault?.units ?? "",
+          });
       }
       out[studio.id] = rows;
     }

@@ -29,6 +29,7 @@ export interface ExportJob {
   id: string;
   documentId: string; // Added documentId for better identification
   elementId: string; // Added elementId for better identification
+  elementName: string; // Added element name for context
   partId: string; // Added partId for unique identification
   partName: string;
   studioName: string; // Added studio name for context
@@ -43,6 +44,7 @@ export interface ExportJob {
 
 export type ConfigOption = {
   key: string; // configuration parameter name or ID as Onshape shows it (e.g. "Width" or "BTM123...")
+  keyDisplay: string; // A more user-friendly display name for the configuration parameter
   values: (string | number)[];
   unit: string;
 };
@@ -50,7 +52,9 @@ export type ConfigOption = {
 export type ExportInput = {
   documentId: string;
   elementId: string; // Part Studio element ID
+  elementName: string;
   partId: string; // Specific part ID (or leave empty string "" to export all parts for translation formats)
+  partName: string;
   formats: string[]; // e.g. ["STL", "STEP", "SOLIDWORKS"]
   configOptions: ConfigOption[];
   combineParts: boolean;
