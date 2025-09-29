@@ -1,22 +1,18 @@
 // components/ConfigParamInput.tsx
-import {
-  BooleanParam,
-  ConfigurationParameter,
-  QuantityParam,
-} from "@/components/types";
+import { ConfigurationParameter } from "@/components/types";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
 // ---------- Type guards ----------
-function isQuantityParam(p: ConfigurationParameter): p is QuantityParam {
+function isQuantityParam(p: ConfigurationParameter) {
   return p?.btType?.includes("Quantity");
 }
-function isBooleanParam(p: ConfigurationParameter): p is BooleanParam {
+function isBooleanParam(p: ConfigurationParameter) {
   return p?.btType?.includes("Boolean");
 }
 
 // ---------- Helpers ----------
-function unitsOf(p: QuantityParam): string | undefined {
+function unitsOf(p: ConfigurationParameter): string | undefined {
   return p?.value?.units || p?.rangeAndDefault?.units || undefined;
 }
 
@@ -29,7 +25,7 @@ function placeholderFor(p: ConfigurationParameter): string {
   return "A, B, C";
 }
 
-function formatRangeHint(p: QuantityParam): string | null {
+function formatRangeHint(p: ConfigurationParameter): string | null {
   const r = p.rangeAndDefault;
   if (!r) return null;
   const min = typeof r.minValue === "number" ? `${r.minValue}` : undefined;
