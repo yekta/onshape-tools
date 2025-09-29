@@ -117,12 +117,12 @@ export default function ExportResultsPage({
 
                   <div className="flex-1 min-w-0 flex flex-col">
                     <p className="font-medium leading-tight text-balance">
-                      {job.studioName} → {job.partName}
+                      {job.studioName}
+                      {job.combineParts ? " (Combined)" : ` → ${job.partName}`}
                     </p>
                     <p className="text-xs text-muted-foreground text-balance leading-tight mt-1">
-                      {job.format} • Document ID: {job.documentId.slice(0, 4)} •
-                      Element ID: {job.elementId.slice(0, 4)} • Part ID:{" "}
-                      {job.partId}
+                      Document ID: {job.documentId.slice(0, 4)} • Element ID:{" "}
+                      {job.elementId.slice(0, 4)} • Part ID: {job.partId}
                     </p>
                     {job.error && (
                       <p className="text-sm text-destructive leading-tight mt-2">
@@ -181,11 +181,9 @@ function downloadFile(job: ExportJob) {
   const url = URL.createObjectURL(job.blob);
   const a = document.createElement("a");
   a.href = url;
-  const fileExtension =
-    job.format.toLowerCase() === "solidworks"
-      ? "sldprt"
-      : job.format.toLowerCase();
-  a.download = `${job.studioName}_${job.partName}.${fileExtension}`;
+  a.download = `${job.studioName}${
+    job.combineParts ? " (Combined)" : ` ${job.partName}`
+  }.zip`;
   document.body.appendChild(a);
   a.click();
   document.body.removeChild(a);

@@ -1,4 +1,20 @@
+import {
+  OnshapeConfiguration,
+  OnshapeDocumentInfo,
+  OnshapeElementWithConfiguration,
+} from "@/components/types";
 import { type NextRequest, NextResponse } from "next/server";
+
+async function fetchJson<T>(url: string, authHeader: string): Promise<T> {
+  const res = await fetch(url, {
+    headers: { Authorization: authHeader, Accept: "application/json" },
+    cache: "no-store",
+  });
+  if (!res.ok) {
+    throw new Error(`Fetch failed ${res.status} ${res.statusText} for ${url}`);
+  }
+  return (await res.json()) as T;
+}
 
 export async function GET(
   request: NextRequest,
@@ -15,27 +31,13 @@ export async function GET(
 
     const { documentId } = await params;
 
-    // Get document info first to get the workspace ID
-    const docResponse = await fetch(
+    // 1) Document -> default workspace
+    const doc = await fetchJson<OnshapeDocumentInfo>(
       `https://cad.onshape.com/api/v6/documents/${documentId}`,
-      {
-        headers: {
-          Authorization: authHeader,
-          Accept: "application/json",
-        },
-      }
+      authHeader
     );
 
-    if (!docResponse.ok) {
-      return NextResponse.json(
-        { error: `Failed to get document info: ${docResponse.statusText}` },
-        { status: docResponse.status }
-      );
-    }
-
-    const docData = await docResponse.json();
-    const workspaceId = docData.defaultWorkspace?.id;
-
+    const workspaceId = doc.defaultWorkspace?.id;
     if (!workspaceId) {
       return NextResponse.json(
         { error: "No default workspace found" },
@@ -43,28 +45,31 @@ export async function GET(
       );
     }
 
-    // Get elements from the workspace
-    const elementsResponse = await fetch(
+    // 2) Elements in workspace
+    const elements = await fetchJson<OnshapeElementWithConfiguration[]>(
       `https://cad.onshape.com/api/v6/documents/d/${documentId}/w/${workspaceId}/elements`,
-      {
-        headers: {
-          Authorization: authHeader,
-          Accept: "application/json",
-        },
-      }
+      authHeader
     );
 
-    if (!elementsResponse.ok) {
-      return NextResponse.json(
-        { error: `Failed to get elements: ${elementsResponse.statusText}` },
-        { status: elementsResponse.status }
-      );
-    }
+    // 3) Attach configuration when available
+    const withConfigs: OnshapeElementWithConfiguration[] = await Promise.all(
+      elements.map(async (el) => {
+        try {
+          const cfg = await fetchJson<OnshapeConfiguration>(
+            `https://cad.onshape.com/api/v6/elements/d/${documentId}/w/${workspaceId}/e/${el.id}/configuration`,
+            authHeader
+          );
+          return { ...el, configuration: cfg ?? null };
+        } catch {
+          // Non-configurable elements commonly 404 here — normalize to null.
+          return { ...el, configuration: null };
+        }
+      })
+    );
 
-    const elementsData = await elementsResponse.json();
-    return NextResponse.json(elementsData);
-  } catch (error) {
-    console.error("Error fetching elements:", error);
+    return NextResponse.json(withConfigs);
+  } catch (err) {
+    console.error("Error fetching elements:", err);
     return NextResponse.json(
       { error: "Failed to fetch elements" },
       { status: 500 }

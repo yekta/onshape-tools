@@ -2,13 +2,16 @@
 
 import AuthPage from "@/components/auth-page";
 import DocumentSelectionPage from "@/components/document-selection-page";
-import ExportConfigurationPage from "@/components/export-configuration-page";
+import ExportConfigurationPage, {
+  PerStudioConfig,
+} from "@/components/export-configuration-page";
 import ExportResultPage from "@/components/export-results-page";
 import { getJobId } from "@/components/helpers";
 import {
   ExportJob,
   OnshapeDocument,
   OnshapeElement,
+  OnshapeElementWithConfiguration,
   PartStudioPart,
 } from "@/components/types";
 import { useEffect, useState } from "react";
@@ -91,7 +94,8 @@ export default function Page() {
 
   // Get part studios from elements
   const partStudios = documentElements.filter(
-    (element: OnshapeElement) => element.elementType === "PARTSTUDIO"
+    (element: OnshapeElementWithConfiguration) =>
+      element.elementType === "PARTSTUDIO"
   );
 
   // Auto-select all part studios when document changes
@@ -176,42 +180,56 @@ export default function Page() {
 
   // Export mutation
   const exportMutation = useMutation({
-    mutationFn: async () => {
+    mutationFn: async ({
+      perStudioConfig,
+      combineByStudio,
+    }: {
+      perStudioConfig: PerStudioConfig;
+      combineByStudio: Record<string, boolean>;
+    }) => {
       if (selectedParts.length === 0 || selectedFormats.length === 0) {
         throw new Error("No parts found or no formats selected");
       }
-
-      if (!selectedDocument) {
-        throw new Error("No document selected");
-      }
-
-      if (selectedPartStudioIds.length === 0) {
+      if (!selectedDocument) throw new Error("No document selected");
+      if (selectedPartStudioIds.length === 0)
         throw new Error("No part studios selected");
-      }
 
       const jobs: ExportJob[] = [];
 
       // Create export jobs for each SELECTED part and format combination
       for (const part of selectedParts) {
-        for (const format of selectedFormats) {
-          jobs.push({
-            id: `${getJobId({
-              elementId: part.elementId,
-              partId: part.partId,
-              format,
-            })}`,
-            documentId: selectedDocument.id,
+        jobs.push({
+          id: `${getJobId({
             elementId: part.elementId,
             partId: part.partId,
-            partName: part.name,
-            studioName: part.studioName,
-            format,
-            status: "pending",
-          });
-        }
+          })}`,
+          documentId: selectedDocument.id,
+          elementId: part.elementId,
+          partId: part.partId,
+          partName: part.name,
+          studioName: part.studioName,
+          formats: selectedFormats,
+          status: "pending",
+          configOptions: perStudioConfig[part.elementId] ?? [],
+          combineParts: combineByStudio[part.elementId] || false,
+        });
       }
 
-      setExportJobs(jobs);
+      // Clean jobs: if combineByStudio is active, keep only the first job per studio
+      const cleanedJobs = jobs.reduce((acc, job) => {
+        if (combineByStudio[job.elementId]) {
+          // Check if we already have a job for this studio
+          const existingJob = acc.find((j) => j.elementId === job.elementId);
+          if (!existingJob) {
+            acc.push(job);
+          }
+        } else {
+          acc.push(job);
+        }
+        return acc;
+      }, [] as ExportJob[]);
+
+      setExportJobs(cleanedJobs);
       setCurrentStep("results");
 
       // Process exports
@@ -230,13 +248,16 @@ export default function Page() {
             )
           );
 
+          // Pass studio-scoped params straight through
           const blob = await exportPart({
             documentId: selectedDocument.id,
             elementId: job.elementId,
             partId: job.partId,
-            format: job.format,
+            formats: job.formats,
             apiKey,
             secretKey,
+            configOptions: perStudioConfig[job.elementId] ?? [],
+            combineParts: combineByStudio[job.elementId] || false,
           });
 
           setExportJobs((prev) =>
@@ -262,12 +283,10 @@ export default function Page() {
         }
       };
 
-      await Promise.all(jobs.map(processExport));
+      await Promise.all(cleanedJobs.map(processExport));
     },
     onError: (error: Error) => {
-      toast.error("Export failed", {
-        description: error.message,
-      });
+      toast.error("Export failed", { description: error.message });
     },
   });
 
@@ -337,7 +356,7 @@ export default function Page() {
         {currentStep === "export" && (
           <ExportConfigurationPage
             onBackClick={() => setCurrentStep("documents")}
-            onExportClick={() => exportMutation.mutate()}
+            onExportClick={(params) => exportMutation.mutate(params)}
             isLoading={
               elementsLoading || partsLoading || exportMutation.isPending
             }

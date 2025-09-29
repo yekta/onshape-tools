@@ -1,6 +1,8 @@
 import {
+  ConfigOption,
+  ExportInput,
   OnshapeDocument,
-  OnshapeElement,
+  OnshapeElementWithConfiguration,
   PartStudioPart,
 } from "@/components/types";
 
@@ -65,7 +67,7 @@ export async function fetchDocumentElements({
     throw new Error("Failed to load document elements");
   }
 
-  const resJson: OnshapeElement[] = await response.json();
+  const resJson: OnshapeElementWithConfiguration[] = await response.json();
   return resJson;
 }
 
@@ -101,29 +103,36 @@ export async function exportPart({
   documentId,
   elementId,
   partId,
-  format,
+  formats,
   apiKey,
   secretKey,
+  configOptions,
+  combineParts,
 }: {
   documentId: string;
   elementId: string;
   partId: string;
-  format: string;
+  formats: string[];
   apiKey: string;
   secretKey: string;
+  configOptions: ConfigOption[];
+  combineParts: boolean;
 }) {
+  const body: ExportInput = {
+    documentId,
+    elementId,
+    partId,
+    formats,
+    configOptions,
+    combineParts,
+  };
   const response = await fetch("/api/onshape/export", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
       Authorization: `Basic ${btoa(`${apiKey}:${secretKey}`)}`,
     },
-    body: JSON.stringify({
-      documentId,
-      elementId,
-      partId,
-      format,
-    }),
+    body: JSON.stringify(body),
   });
 
   if (!response.ok) {
