@@ -50,9 +50,7 @@ export function getBaseFileName({
   partName: string;
   combineParts: boolean;
 }) {
-  return combineParts
-    ? `${elementName} - Combined`
-    : `${elementName} - ${partName}`;
+  return combineParts ? `${elementName}` : `${elementName} - ${partName}`;
 }
 
 export function extForFormat(fmt: string) {

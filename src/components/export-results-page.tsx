@@ -182,7 +182,7 @@ function downloadFile(job: ExportJob) {
   const a = document.createElement("a");
   a.href = url;
   a.download = `${job.studioName}${
-    job.combineParts ? " - Combined" : ` - ${job.partName}`
+    job.combineParts ? "" : ` - ${job.partName}`
   }.zip`;
   document.body.appendChild(a);
   a.click();
