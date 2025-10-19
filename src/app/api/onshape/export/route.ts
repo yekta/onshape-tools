@@ -73,7 +73,7 @@ export async function POST(request: NextRequest) {
       mode: "binary",
       units: "millimeter",
       scale: 1,
-      angleTolerance: "2.5",
+      angleTolerance: "0.04363323129985824",
       chordTolerance: "0.06",
       minFacetWidth: "0.0254",
     } as const;
