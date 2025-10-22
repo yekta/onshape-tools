@@ -33,7 +33,6 @@ export default function Page() {
   const [selectedFormats, setSelectedFormats] = useState<string[]>([
     "STL",
     "STEP",
-    "SOLIDWORKS",
   ]);
   const [selectedPartStudioIds, setSelectedPartStudioIds] = useState<string[]>(
     []
