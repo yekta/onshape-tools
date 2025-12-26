@@ -28,6 +28,7 @@ export default function Page() {
   const [apiKey, setApiKey] = useState("");
   const [secretKey, setSecretKey] = useState("");
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [minFacetWidth, setMinFacetWidth] = useState("0.0254");
   const [selectedDocument, setSelectedDocument] =
     useState<OnshapeDocument | null>(null);
   const [selectedFormats, setSelectedFormats] = useState<string[]>([
@@ -260,6 +261,7 @@ export default function Page() {
             secretKey,
             configOptions: perStudioConfig[job.elementId] ?? [],
             combineParts: combineByStudio[job.elementId] || false,
+            minFacetWidth,
           });
 
           setExportJobs((prev) =>
@@ -369,6 +371,8 @@ export default function Page() {
             partStudios={partStudios}
             selectedPartStudioIds={selectedPartStudioIds}
             setSelectedPartStudioIds={setSelectedPartStudioIds}
+            minFacetWidth={minFacetWidth}
+            setMinFacetWidth={setMinFacetWidth}
           />
         )}
 

@@ -33,6 +33,7 @@ export async function POST(request: NextRequest) {
       formats,
       configOptions,
       combineParts = false,
+      minFacetWidth,
     } = body || {};
 
     if (!documentId || !elementId || !formats || !Array.isArray(formats)) {
@@ -75,7 +76,7 @@ export async function POST(request: NextRequest) {
       scale: 1,
       angleTolerance: "0.04363323129985824",
       chordTolerance: "0.06",
-      minFacetWidth: "0.0254",
+      minFacetWidth: minFacetWidth !== undefined ? minFacetWidth : "0.0254",
     } as const;
 
     for (const combo of combos) {

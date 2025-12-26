@@ -3,7 +3,6 @@ import { EXPORT_FORMATS } from "@/components/constants";
 import {
   ConfigOption,
   ConfigurationParameter,
-  OnshapeConfiguration,
   OnshapeDocument,
   OnshapeElementWithConfiguration,
   PartStudioPart,
@@ -39,6 +38,8 @@ export type ExportConfigurationPageProps = {
   partStudios: OnshapeElementWithConfiguration[]; // already includes .configuration
   selectedPartStudioIds: string[];
   setSelectedPartStudioIds: (ids: string[]) => void;
+  minFacetWidth: string;
+  setMinFacetWidth: (width: string) => void;
 };
 
 function parseCSVValues(raw: string): (string | number)[] {
@@ -70,6 +71,8 @@ export default function ExportConfigurationPage({
   partStudios,
   selectedPartStudioIds,
   setSelectedPartStudioIds,
+  minFacetWidth,
+  setMinFacetWidth,
 }: ExportConfigurationPageProps) {
   // ---------- per-studio combine toggle ----------
   const [combineByStudio, setCombineByStudio] = useState<
@@ -262,7 +265,6 @@ export default function ExportConfigurationPage({
               ))}
             </div>
           </div>
-
           {/* Part Studio Selection + Parameters (auto-listed) */}
           <div className="w-full flex flex-col">
             <Label className="text-base font-medium">Part Studios</Label>

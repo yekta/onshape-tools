@@ -58,6 +58,7 @@ export type ExportInput = {
   formats: string[]; // e.g. ["STL", "STEP", "SOLIDWORKS"]
   configOptions: ConfigOption[];
   combineParts: boolean;
+  minFacetWidth?: string;
 };
 
 export type OnshapeElementType = "PARTSTUDIO" | "ASSEMBLY" | "DRAWING" | string;

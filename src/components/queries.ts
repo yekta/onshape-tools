@@ -110,6 +110,7 @@ export async function exportPart({
   secretKey,
   configOptions,
   combineParts,
+  minFacetWidth,
 }: {
   documentId: string;
   elementId: string;
@@ -121,6 +122,7 @@ export async function exportPart({
   secretKey: string;
   configOptions: ConfigOption[];
   combineParts: boolean;
+  minFacetWidth?: string;
 }) {
   const body: ExportInput = {
     documentId,
@@ -131,6 +133,7 @@ export async function exportPart({
     formats,
     configOptions,
     combineParts,
+    minFacetWidth,
   };
   const response = await fetch("/api/onshape/export", {
     method: "POST",
