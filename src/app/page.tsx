@@ -23,12 +23,19 @@ import {
   fetchDocuments,
   fetchStudioParts,
 } from "@/components/queries";
+import {
+  DEFAULT_ANGLE_TOLERANCE,
+  DEFAULT_CHORD_TOLERANCE,
+  DEFAULT_MIN_FACET_WIDTH,
+} from "@/components/constants";
 
 export default function Page() {
   const [apiKey, setApiKey] = useState("");
   const [secretKey, setSecretKey] = useState("");
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [minFacetWidth, setMinFacetWidth] = useState("0.0254");
+  const [minFacetWidth, setMinFacetWidth] = useState("");
+  const [angleTolerance, setAngleTolerance] = useState("");
+  const [chordTolerance, setChordTolerance] = useState("");
   const [selectedDocument, setSelectedDocument] =
     useState<OnshapeDocument | null>(null);
   const [selectedFormats, setSelectedFormats] = useState<string[]>([
@@ -262,6 +269,8 @@ export default function Page() {
             configOptions: perStudioConfig[job.elementId] ?? [],
             combineParts: combineByStudio[job.elementId] || false,
             minFacetWidth,
+            angleTolerance,
+            chordTolerance,
           });
 
           setExportJobs((prev) =>
@@ -373,6 +382,10 @@ export default function Page() {
             setSelectedPartStudioIds={setSelectedPartStudioIds}
             minFacetWidth={minFacetWidth}
             setMinFacetWidth={setMinFacetWidth}
+            angleTolerance={angleTolerance}
+            setAngleTolerance={setAngleTolerance}
+            chordTolerance={chordTolerance}
+            setChordTolerance={setChordTolerance}
           />
         )}
 

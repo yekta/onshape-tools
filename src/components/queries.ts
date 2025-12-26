@@ -111,6 +111,8 @@ export async function exportPart({
   configOptions,
   combineParts,
   minFacetWidth,
+  angleTolerance,
+  chordTolerance,
 }: {
   documentId: string;
   elementId: string;
@@ -123,6 +125,8 @@ export async function exportPart({
   configOptions: ConfigOption[];
   combineParts: boolean;
   minFacetWidth?: string;
+  angleTolerance?: string;
+  chordTolerance?: string;
 }) {
   const body: ExportInput = {
     documentId,
@@ -134,6 +138,8 @@ export async function exportPart({
     configOptions,
     combineParts,
     minFacetWidth,
+    angleTolerance,
+    chordTolerance,
   };
   const response = await fetch("/api/onshape/export", {
     method: "POST",

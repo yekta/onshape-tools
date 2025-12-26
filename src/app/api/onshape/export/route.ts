@@ -12,6 +12,10 @@ import {
   isZipPayload,
   pickZipEntryForPart,
 } from "@/app/api/onshape/export/helpers";
+import {
+  DEFAULT_ANGLE_TOLERANCE,
+  DEFAULT_CHORD_TOLERANCE,
+} from "@/components/constants";
 
 export async function POST(request: NextRequest) {
   try {
@@ -34,6 +38,8 @@ export async function POST(request: NextRequest) {
       configOptions,
       combineParts = false,
       minFacetWidth,
+      angleTolerance,
+      chordTolerance,
     } = body || {};
 
     if (!documentId || !elementId || !formats || !Array.isArray(formats)) {
@@ -74,9 +80,18 @@ export async function POST(request: NextRequest) {
       mode: "binary",
       units: "millimeter",
       scale: 1,
-      angleTolerance: "0.04363323129985824",
-      chordTolerance: "0.06",
-      minFacetWidth: minFacetWidth !== undefined ? minFacetWidth : "0.0254",
+      angleTolerance:
+        angleTolerance !== undefined && angleTolerance !== ""
+          ? angleTolerance
+          : DEFAULT_ANGLE_TOLERANCE,
+      chordTolerance:
+        chordTolerance !== undefined && chordTolerance !== ""
+          ? chordTolerance
+          : DEFAULT_CHORD_TOLERANCE,
+      minFacetWidth:
+        minFacetWidth !== undefined && minFacetWidth !== ""
+          ? minFacetWidth
+          : "0.0254",
     } as const;
 
     for (const combo of combos) {

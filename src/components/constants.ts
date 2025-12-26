@@ -11,3 +11,7 @@ export const EXPORT_FORMATS = [
     description: "SolidWorks native format",
   },
 ];
+
+export const DEFAULT_MIN_FACET_WIDTH = "0.0254";
+export const DEFAULT_ANGLE_TOLERANCE = "0.04363323129985824";
+export const DEFAULT_CHORD_TOLERANCE = "0.06";

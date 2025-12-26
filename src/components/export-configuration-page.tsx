@@ -1,5 +1,10 @@
 import ConfigParamInput from "@/components/config-param-input";
-import { EXPORT_FORMATS } from "@/components/constants";
+import {
+  DEFAULT_ANGLE_TOLERANCE,
+  DEFAULT_CHORD_TOLERANCE,
+  DEFAULT_MIN_FACET_WIDTH,
+  EXPORT_FORMATS,
+} from "@/components/constants";
 import {
   ConfigOption,
   ConfigurationParameter,
@@ -16,6 +21,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ArrowLeft, Loader, Package, SettingsIcon } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
@@ -40,6 +46,10 @@ export type ExportConfigurationPageProps = {
   setSelectedPartStudioIds: (ids: string[]) => void;
   minFacetWidth: string;
   setMinFacetWidth: (width: string) => void;
+  angleTolerance: string;
+  setAngleTolerance: (angle: string) => void;
+  chordTolerance: string;
+  setChordTolerance: (chord: string) => void;
 };
 
 function parseCSVValues(raw: string): (string | number)[] {
@@ -73,6 +83,10 @@ export default function ExportConfigurationPage({
   setSelectedPartStudioIds,
   minFacetWidth,
   setMinFacetWidth,
+  angleTolerance,
+  setAngleTolerance,
+  chordTolerance,
+  setChordTolerance,
 }: ExportConfigurationPageProps) {
   // ---------- per-studio combine toggle ----------
   const [combineByStudio, setCombineByStudio] = useState<
@@ -263,6 +277,53 @@ export default function ExportConfigurationPage({
                   </p>
                 </Label>
               ))}
+            </div>
+          </div>
+          {/* STL Quality Settings */}
+          <div className="w-full flex flex-col -mt-1.5">
+            <Label className="text-base font-medium">
+              STL Quality Settings
+            </Label>
+            <div className="w-full flex flex-col pt-3">
+              <Label className="w-[calc(100%+1rem)] items-start flex flex-col gap-0 py-2 first:-mt-2 px-2 rounded -mx-2">
+                <p className="w-full text-left px-1 text-muted-foreground text-sm">
+                  Minimum Facet Width
+                </p>
+                <Input
+                  className="mt-1"
+                  placeholder={DEFAULT_MIN_FACET_WIDTH}
+                  value={minFacetWidth}
+                  onChange={(e) => {
+                    setMinFacetWidth(e.target.value);
+                  }}
+                />
+              </Label>
+              <Label className="w-[calc(100%+1rem)] items-start flex flex-col gap-0 py-2 first:-mt-2 px-2 rounded -mx-2">
+                <p className="w-full text-left px-1 text-muted-foreground text-sm">
+                  Angle Tolerance
+                </p>
+                <Input
+                  className="mt-1"
+                  placeholder={DEFAULT_ANGLE_TOLERANCE}
+                  value={angleTolerance}
+                  onChange={(e) => {
+                    setAngleTolerance(e.target.value);
+                  }}
+                />
+              </Label>
+              <Label className="w-[calc(100%+1rem)] items-start flex flex-col gap-0 py-2 first:-mt-2 px-2 rounded -mx-2">
+                <p className="w-full text-left px-1 text-muted-foreground text-sm">
+                  Chord Tolerance
+                </p>
+                <Input
+                  className="mt-1"
+                  placeholder={DEFAULT_CHORD_TOLERANCE}
+                  value={chordTolerance}
+                  onChange={(e) => {
+                    setChordTolerance(e.target.value);
+                  }}
+                />
+              </Label>
             </div>
           </div>
           {/* Part Studio Selection + Parameters (auto-listed) */}

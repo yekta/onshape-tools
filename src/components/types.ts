@@ -59,6 +59,8 @@ export type ExportInput = {
   configOptions: ConfigOption[];
   combineParts: boolean;
   minFacetWidth?: string;
+  angleTolerance?: string;
+  chordTolerance?: string;
 };
 
 export type OnshapeElementType = "PARTSTUDIO" | "ASSEMBLY" | "DRAWING" | string;
